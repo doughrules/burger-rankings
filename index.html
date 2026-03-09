@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🍔 Burger Power Rankings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700;1,900&family=Lato:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    :root {
+      --cream: #f0e6d0;
+      --card-bg: #e8d9be;
+      --card-border: #c8a96e;
+      --dark: #3a1f00;
+      --gold: #d4a017;
+      --gold-dark: #b8860b;
+      --gold-muted: #c8a96e;
+      --brown: #5c3a1e;
+      --input-bg: #f5ece0;
+      --red: #c0392b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--brown); min-height: 100vh; }
+
+    /* HERO */
+    .hero-wrap { background: var(--dark); }
+    .hero-img-box { position: relative; width: 100%; max-width: 640px; margin: 0 auto; }
+    .hero-img-box img { width: 100%; height: 260px; object-fit: cover; object-position: center 30%; display: block; opacity: 0.88; }
+    .hero-img-box h1 {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      text-align: center;
+      font-family: 'Playfair Display', serif; font-style: italic; font-weight: 900;
+      font-size: 2.4rem; color: var(--gold);
+      text-shadow: 1px 3px 12px rgba(0,0,0,0.7);
+      padding: 16px 20px 20px;
+      background: linear-gradient(transparent, rgba(40,15,0,0.6));
+    }
+    .hero-sub {
+      text-align: center; background: var(--dark);
+      padding: 10px 16px; letter-spacing: 0.2em;
+      font-size: 0.72rem; color: var(--gold-muted); text-transform: uppercase;
+    }
+    .hero-sub span { color: var(--gold); }
+
+    /* NAV */
+    .nav { display: flex; gap: 10px; padding: 14px 16px; max-width: 680px; margin: 0 auto; }
+    .nav-btn {
+      flex: 1; padding: 13px 8px; border-radius: 14px;
+      border: 2px solid var(--card-border); background: transparent;
+      color: var(--dark); font-family: 'Lato', sans-serif;
+      font-weight: 700; font-size: 0.95rem; cursor: pointer; text-align: center;
+    }
+    .nav-btn.active { background: var(--gold); border-color: var(--gold); }
+
+    /* ADD BAR */
+    .add-bar { display: flex; gap: 10px; max-width: 680px; margin: 0 auto; padding: 0 16px 16px; }
+    .add-bar input {
+      flex: 1; padding: 13px 16px; border-radius: 14px;
+      border: 2px solid var(--card-border); background: var(--input-bg);
+      font-size: 0.95rem; font-family: 'Lato', sans-serif; color: var(--dark); outline: none;
+    }
+    .add-bar input:focus { border-color: var(--gold); }
+    .add-bar input::placeholder { color: var(--gold-muted); }
+    .add-btn {
+      width: 48px; height: 48px; border-radius: 14px; border: none;
+      background: var(--gold); color: var(--dark); font-size: 1.4rem;
+      font-weight: 700; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .add-btn:hover { background: var(--gold-dark); }
+
+    .sync-error { color: var(--red); font-size: 0.85rem; padding: 0 16px 10px; max-width: 680px; margin: 0 auto; display: block; }
+
+    /* CONTENT */
+    .content { max-width: 680px; margin: 0 auto; padding: 0 16px 40px; }
+
+    /* PILLS */
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill {
+      padding: 7px 16px; border-radius: 999px;
+      border: 2px solid var(--card-border); background: transparent;
+      color: var(--dark); font-weight: 700; font-size: 0.82rem; cursor: pointer;
+    }
+    .pill.active { background: var(--gold); border-color: var(--gold); }
+
+    /* BOARD CARD */
+    .board-card {
+      background: var(--card-bg); border: 2px solid var(--card-border);
+      border-radius: 16px; padding: 16px 18px; margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .board-card:hover { border-color: var(--gold); }
+    .board-card-top { display: flex; align-items: center; gap: 12px; }
+    .board-medal { font-size: 1.6rem; flex-shrink: 0; }
+    .board-name {
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-weight: 700; font-size: 1.15rem; color: var(--gold-dark); flex: 1;
+    }
+    .board-sub { font-size: 0.78rem; color: var(--brown); opacity: 0.7; margin-top: 1px; }
+    .score-badge {
+      background: var(--gold); color: var(--dark);
+      font-family: 'Playfair Display', serif; font-weight: 900;
+      font-size: 1.1rem; border-radius: 10px;
+      padding: 6px 12px; flex-shrink: 0;
+    }
+    .board-raters { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border); }
+    .rater-row { font-size: 0.82rem; color: var(--brown); }
+    .rater-name { color: var(--gold-dark); font-weight: 700; }
+    .rater-score { font-weight: 700; color: var(--brown); }
+
+    /* RATE VIEW */
+    .rate-card {
+      background: var(--card-bg); border: 2px solid var(--card-border);
+      border-radius: 16px; overflow: hidden; margin-bottom: 16px;
+    }
+    .rate-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 18px; border-bottom: 1px solid var(--card-border);
+    }
+    .rate-card-name {
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-weight: 700; font-size: 1.25rem; color: var(--gold-dark);
+    }
+    .collapse-btn {
+      width: 40px; height: 36px; border-radius: 10px; border: none;
+      background: var(--gold-muted); color: var(--dark);
+      font-size: 1.1rem; font-weight: 700; cursor: pointer;
+    }
+    .criteria-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 13px 18px; border-top: 1px solid var(--card-border);
+    }
+    .criteria-label { font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dark); }
+    .criteria-sub { font-size: 0.74rem; color: var(--brown); opacity: 0.65; margin-top: 2px; }
+    .burger-icons { display: flex; gap: 2px; cursor: pointer; user-select: none; }
+    .burger-icon { font-size: 1.4rem; line-height: 1; opacity: 0.25; transition: opacity 0.1s; }
+    .burger-icon.lit { opacity: 1; }
+    .burger-icon.half-lit { opacity: 0.55; }
+
+    .order-section { padding: 14px 18px; border-top: 1px solid var(--card-border); }
+    .order-label { font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dark); margin-bottom: 8px; }
+    .order-input {
+      width: 100%; padding: 12px 14px; border-radius: 12px;
+      border: 2px solid var(--card-border); background: var(--input-bg);
+      font-size: 0.9rem; font-family: 'Lato', sans-serif; color: var(--dark); outline: none;
+    }
+    .order-input:focus { border-color: var(--gold); }
+    .order-input::placeholder { color: var(--gold-muted); }
+
+    .visit-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-top: 1px solid var(--card-border); }
+    .visit-label { font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dark); }
+    .visit-input {
+      padding: 10px 12px; border-radius: 12px;
+      border: 2px solid var(--card-border); background: var(--input-bg);
+      font-size: 0.85rem; font-family: 'Lato', sans-serif; color: var(--dark); outline: none;
+    }
+    .visit-input:focus { border-color: var(--gold); }
+    .visit-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+
+    .submit-row { padding: 14px 18px; border-top: 1px solid var(--card-border); }
+    .submit-btn {
+      width: 100%; padding: 13px; border-radius: 14px; border: none;
+      background: var(--gold); color: var(--dark);
+      font-family: 'Lato', sans-serif; font-weight: 700; font-size: 1rem;
+      cursor: pointer;
+    }
+    .submit-btn:hover { background: var(--gold-dark); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 12px; font-weight: 700;
+      font-size: 0.9rem; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      white-space: nowrap; color: var(--cream);
+    }
+
+    /* JOIN */
+    .join-wrap { min-height: 100vh; background: var(--cream); display: flex; flex-direction: column; }
+    .join-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; gap: 12px; }
+    .join-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.75rem; color: var(--dark); text-align: center; }
+    .join-sub { color: var(--brown); font-size: 0.95rem; opacity: 0.8; margin-bottom: 4px; }
+    .join-row { display: flex; gap: 10px; width: 100%; max-width: 420px; }
+    .join-input {
+      flex: 1; padding: 13px 16px; border-radius: 14px;
+      border: 2px solid var(--card-border); background: var(--input-bg);
+      font-size: 0.95rem; font-family: 'Lato', sans-serif; color: var(--dark); outline: none;
+    }
+    .join-input:focus { border-color: var(--gold); }
+    .join-input::placeholder { color: var(--gold-muted); }
+    .join-btn {
+      width: 52px; height: 52px; border-radius: 14px; border: none;
+      background: var(--gold); color: var(--dark); font-size: 1.2rem;
+      font-weight: 700; cursor: pointer; flex-shrink: 0;
+    }
+    .join-note { font-size: 0.78rem; color: var(--brown); opacity: 0.55; margin-top: 4px; }
+
+    .empty-state { text-align: center; padding: 40px 16px; color: var(--brown); opacity: 0.6; }
+    .empty-state div:first-child { font-size: 2.5rem; margin-bottom: 10px; }
+
+    .fullscreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 16px; text-align: center; padding: 32px; background: var(--cream); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { useState, useEffect, useCallback } = React;
+
+  const SUPABASE_URL = "https://wjdtpqeqahxxpdutagye.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZHRwcWVxYWh4eHBkdXRhZ3llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDg0NTEsImV4cCI6MjA4ODYyNDQ1MX0.YZNAKbckFJ0VTQ2aTnC2l8uWlbjAPpBX_zYNnd55aVs";
+  const HEADERS = { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` };
+  const TABLE_URL = `${SUPABASE_URL}/rest/v1/Burgers`;
+
+  const CRITERIA = ["Patty", "Bun", "Toppings & Sauce", "Value", "Vibes"];
+  const CRITERIA_DESC = {
+    "Patty": "Cook, crust, juiciness, flavour",
+    "Bun": "Texture, freshness, ratio",
+    "Toppings & Sauce": "Balance, quality, creativity, sauce",
+    "Value": "Worth the price?",
+    "Vibes": "Atmosphere, service, would return?"
+  };
+  const BOARD_FILTERS = ["Overall", "Patty", "Bun", "Toppings & Sauce", "Value", "Vibes", "Price"];
+  const MEDALS = ["🥇","🥈","🥉"];
+  const ADMIN_PASSWORD = "adminadmin";
+  const SITE_PASSWORD = "BURGERS4EVER";
+
+  // Burger emoji half-point rating
+  const BurgerStars = ({ value = 0, onChange }) => {
+    const [hover, setHover] = useState(null);
+    const display = hover !== null ? hover : value;
+
+    const getVal = (e, i) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      return x < r.width / 2 ? i - 0.5 : i;
+    };
+
+    return (
+      <div className="burger-icons">
+        {[1,2,3,4,5].map(i => {
+          const filled = display >= i;
+          const half = !filled && display >= i - 0.5;
+          return (
+            <span key={i}
+              className={`burger-icon${filled ? " lit" : half ? " half-lit" : ""}`}
+              onMouseMove={onChange ? e => setHover(getVal(e, i)) : undefined}
+              onMouseLeave={onChange ? () => setHover(null) : undefined}
+              onClick={onChange ? e => { const v = getVal(e, i); setHover(v); onChange(v); } : undefined}
+              onTouchStart={onChange ? e => { e.preventDefault(); const v = getVal(e, i); setHover(v); onChange(v); } : undefined}
+              onTouchEnd={onChange ? e => e.preventDefault() : undefined}
+              style={{touchAction:"none"}}
+            >🍔</span>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const avgOf = (burger, criterion) => {
+    if (!burger.ratings?.length) return null;
+    if (criterion === "Price") {
+      const priced = burger.ratings.filter(r => r.price != null);
+      if (!priced.length) return null;
+      const avg = priced.reduce((s, r) => s + r.price, 0) / priced.length;
+      return avg.toFixed(0);
+    }
+    if (criterion === "Overall") {
+      const total = burger.ratings.reduce((s, r) =>
+        s + CRITERIA.reduce((a, c) => a + (r.scores[c] || 0), 0) / CRITERIA.length, 0);
+      return (total / burger.ratings.length).toFixed(1);
+    }
+    const total = burger.ratings.reduce((s, r) => s + (r.scores[criterion] || 0), 0);
+    return (total / burger.ratings.length).toFixed(1);
+  };
+
+  function App() {
+    const [burgers, setBurgers] = useState([]);
+    const [rowId, setRowId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [syncError, setSyncError] = useState(null);
+    const [joined, setJoined] = useState(false);
+    const [joinInput, setJoinInput] = useState("");
+    const [raterName, setRaterName] = useState("");
+    const [view, setView] = useState("rate");
+    const [boardFilter, setBoardFilter] = useState("Overall");
+    const [newRestaurant, setNewRestaurant] = useState("");
+    const [ratings, setRatings] = useState({});
+    const [orderNotes, setOrderNotes] = useState({});
+    const [prices, setPrices] = useState({});
+    const [visitDates, setVisitDates] = useState({});
+    const [collapsed, setCollapsed] = useState({});
+    const [toast, setToast] = useState(null);
+    const [siteUnlocked, setSiteUnlocked] = useState(false);
+    const [siteInput, setSiteInput] = useState("");
+    const [siteError, setSiteError] = useState(false);
+    const [adminMode, setAdminMode] = useState(false);
+    const [adminInput, setAdminInput] = useState("");
+    const [showAdminLogin, setShowAdminLogin] = useState(false);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const showToast = (msg, type = "success") => {
+      setToast({ msg, type });
+      setTimeout(() => setToast(null), 3000);
+    };
+
+    const fetchData = useCallback(async () => {
+      setLoading(true); setSyncError(null);
+      try {
+        const res = await fetch(`${TABLE_URL}?select=*&limit=1`, { headers: HEADERS });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = await res.json();
+        if (rows.length > 0) {
+          setRowId(rows[0].id);
+          setBurgers(rows[0].data?.burgers || []);
+        } else {
+          const ins = await fetch(TABLE_URL, {
+            method: "POST",
+            headers: { ...HEADERS, "Prefer": "return=representation" },
+            body: JSON.stringify({ data: { burgers: [] } })
+          });
+          const newRows = await ins.json();
+          setRowId(newRows[0].id);
+          setBurgers([]);
+        }
+      } catch (e) { setSyncError("Sync error — check connection"); }
+      setLoading(false);
+    }, []);
+
+    useEffect(() => { fetchData(); }, [fetchData]);
+
+    const saveData = async (newBurgers) => {
+      setSaving(true); setSyncError(null);
+      try {
+        const res = await fetch(`${TABLE_URL}?id=eq.${rowId}`, {
+          method: "PATCH",
+          headers: { ...HEADERS, "Prefer": "return=representation" },
+          body: JSON.stringify({ data: { burgers: newBurgers } })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setBurgers(newBurgers);
+        setSaving(false);
+        return true;
+      } catch (e) {
+        setSyncError("Sync error — check connection");
+        setSaving(false);
+        return false;
+      }
+    };
+
+    const handleAddRestaurant = async () => {
+      if (!newRestaurant.trim()) return;
+      const updated = [...burgers, {
+        id: Date.now().toString(),
+        name: newRestaurant.trim(),
+        ratings: [],
+        addedDate: today
+      }];
+      if (await saveData(updated)) {
+        setNewRestaurant("");
+        showToast("Added! 🍔");
+      }
+    };
+
+    const handleRate = async (burgerId) => {
+      const myPrevScores = burgers.find(b => b.id === burgerId)?.ratings?.find(r => r.name.toLowerCase() === raterName.toLowerCase())?.scores || {};
+      const r = { ...myPrevScores, ...(ratings[burgerId] || {}) };
+      if (CRITERIA.some(c => !r[c])) return showToast("Rate all 5 criteria!", "error");
+      const updated = burgers.map(b => b.id !== burgerId ? b : {
+        ...b,
+        lastVisit: visitDates[burgerId] || today,
+        ratings: [
+          ...(b.ratings || []).filter(r => r.name.toLowerCase() !== raterName.toLowerCase()),
+          {
+            name: raterName,
+            scores: r,
+            orderNote: orderNotes[burgerId] || "",
+            price: prices[burgerId] ? parseFloat(prices[burgerId]) : null,
+            visitDate: visitDates[burgerId] || today,
+            date: new Date().toISOString()
+          }
+        ]
+      });
+      if (await saveData(updated)) {
+        showToast("Rating saved! 🍔");
+        setRatings(prev => ({ ...prev, [burgerId]: {} }));
+        setOrderNotes(prev => ({ ...prev, [burgerId]: "" }));
+        setPrices(prev => ({ ...prev, [burgerId]: "" }));
+        setVisitDates(prev => ({ ...prev, [burgerId]: today }));
+      }
+    };
+
+    const myRatingCount = burgers.filter(b => b.ratings?.some(r => r.name.toLowerCase() === raterName.toLowerCase())).length;
+
+    const deleteMyRating = async (burgerId) => {
+      const updated = burgers.map(b => b.id !== burgerId ? b : {
+        ...b,
+        ratings: (b.ratings || []).filter(r => r.name.toLowerCase() !== raterName.toLowerCase())
+      });
+      if (await saveData(updated)) showToast("Rating removed");
+    };
+
+    const adminDeleteRating = async (burgerId, nameToDelete) => {
+      const updated = burgers.map(b => b.id !== burgerId ? b : {
+        ...b,
+        ratings: (b.ratings || []).filter(r => r.name.toLowerCase() !== nameToDelete.toLowerCase())
+      });
+      if (await saveData(updated)) showToast("Rating deleted");
+    };
+
+    const deleteRestaurant = async (burgerId) => {
+      const updated = burgers.filter(b => b.id !== burgerId);
+      if (await saveData(updated)) showToast("Restaurant deleted");
+    };
+
+    // STEP 1: PASSWORD GATE
+    if (!siteUnlocked) return (
+      <div className="join-wrap">
+        <div className="hero-wrap">
+          <div className="hero-img-box">
+            <img src="images/burger-hero.jpg" alt="Burger" onError={e => { e.target.style.display = 'none'; }}/>
+            <h1>Burger Power Rankings</h1>
+          </div>
+          <div className="hero-sub">The Definitive Leaderboard</div>
+        </div>
+        <div className="join-body">
+          <div className="join-title">Members Only 🔒</div>
+          <div className="join-sub">Enter the password to continue</div>
+          <div className="join-row">
+            <input className="join-input" type="password" value={siteInput}
+              onChange={e => { setSiteInput(e.target.value); setSiteError(false); }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (siteInput === SITE_PASSWORD) { setSiteUnlocked(true); setSiteInput(""); }
+                  else setSiteError(true);
+                }
+              }}
+              placeholder="Password…"
+              style={{borderColor: siteError ? "#c0392b" : undefined}}/>
+            <button className="join-btn"
+              onClick={() => {
+                if (siteInput === SITE_PASSWORD) { setSiteUnlocked(true); setSiteInput(""); }
+                else setSiteError(true);
+              }}>→</button>
+          </div>
+          {siteError && <div style={{color:"#c0392b",fontSize:"0.82rem",marginTop:4}}>Wrong password, try again</div>}
+          <div className="join-note" style={{marginTop:8}}>
+            <span style={{cursor:"pointer",textDecoration:"underline",opacity:0.7}}
+              onClick={() => { setSiteUnlocked("browse"); }}>Just browsing? View the board →</span>
+          </div>
+        </div>
+      </div>
+    );
+
+    // STEP 2: NAME SCREEN (after password)
+    if (!joined) return (
+      <div className="join-wrap">
+        <div className="hero-wrap">
+          <div className="hero-img-box">
+            <img src="images/burger-hero.jpg" alt="Burger" onError={e => { e.target.style.display = 'none'; }}/>
+            <h1>Burger Power Rankings</h1>
+          </div>
+          <div className="hero-sub">The Definitive Leaderboard</div>
+        </div>
+        <div className="join-body">
+          <div className="join-title">Nice To Meat You! 🍔</div>
+          <div className="join-sub">Enter your name to join the crawl</div>
+          <div className="join-row">
+            <input className="join-input" value={joinInput}
+              onChange={e => setJoinInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && joinInput.trim()) { setRaterName(joinInput.trim()); setJoined(true); }}}
+              placeholder="Your name…"/>
+            <button className="join-btn"
+              onClick={() => { if (joinInput.trim()) { setRaterName(joinInput.trim()); setJoined(true); }}}>→</button>
+          </div>
+          <div className="join-note">⚠️ Ratings are visible to all participants</div>
+          <div className="join-note" style={{marginTop:6}}>
+            <span style={{cursor:"pointer",textDecoration:"underline",opacity:0.7}}
+              onClick={() => { setRaterName("Guest"); setJoined(true); }}>Just browse the board →</span>
+          </div>
+        </div>
+      </div>
+    );
+
+    if (loading) return (
+      <div className="fullscreen">
+        <div style={{fontSize:48}}>🍔</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontSize:22,color:"var(--dark)"}}>Loading burgers…</div>
+      </div>
+    );
+
+    // Sorted burgers for board
+    const sortedBurgers = [...burgers]
+      .map(b => ({ ...b, score: avgOf(b, boardFilter) }))
+      .sort((a, b) => boardFilter === "Price"
+        ? (parseFloat(a.score) || 999999) - (parseFloat(b.score) || 999999)
+        : (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0));
+
+    return (
+      <div style={{minHeight:"100vh"}}>
+        {toast && (
+          <div className="toast" style={{background: toast.type === "error" ? "#c0392b" : "#3a1f00"}}>
+            {toast.msg}
+          </div>
+        )}
+
+        {/* Admin button - fixed top right */}
+        <div style={{position:"fixed",top:12,right:12,zIndex:998}}>
+          {adminMode
+            ? <button style={{padding:"6px 14px",borderRadius:10,border:"2px solid var(--gold)",background:"var(--gold)",color:"var(--dark)",fontWeight:700,fontSize:"0.75rem",cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
+                onClick={() => setAdminMode(false)}>Admin: ON</button>
+            : <button style={{padding:"6px 14px",borderRadius:10,border:"2px solid var(--card-border)",background:"rgba(240,230,208,0.9)",color:"var(--brown)",fontWeight:700,fontSize:"0.75rem",cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}
+                onClick={() => setShowAdminLogin(true)}>Admin</button>
+          }
+        </div>
+
+        {/* HERO */}
+        <div className="hero-wrap">
+          <div className="hero-img-box">
+            <img src="images/burger-hero.jpg" alt="Burger" onError={e => { e.target.style.display = 'none'; }}/>
+            <h1>Burger Power Rankings</h1>
+          </div>
+          <div className="hero-sub">
+            HEY <span>{raterName.toUpperCase()}</span> · {myRatingCount} RATING{myRatingCount !== 1 ? "S" : ""}
+          </div>
+        </div>
+
+        {/* NAV */}
+        <div className="nav">
+          <button className={`nav-btn${view === "rate" ? " active" : ""}`} onClick={() => setView("rate")}>Rate</button>
+          <button className={`nav-btn${view === "board" ? " active" : ""}`} onClick={() => setView("board")}>
+            🏆 Board ({burgers.length})
+          </button>
+        </div>
+
+        {/* ADD BAR (Rate view only) */}
+        {view === "rate" && raterName !== "Guest" && (
+          <div>
+            <div className="add-bar">
+              <input value={newRestaurant} onChange={e => setNewRestaurant(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleAddRestaurant(); }}
+                placeholder="Add a restaurant…"/>
+              <button className="add-btn" onClick={handleAddRestaurant}>+</button>
+            </div>
+            {syncError && <span className="sync-error">{syncError}</span>}
+          </div>
+        )}
+
+        <div className="content">
+
+          {/* RATE VIEW */}
+          {view === "rate" && (
+            <div>
+              {raterName === "Guest" && (
+                <div style={{background:"var(--card-bg)",border:"2px solid var(--card-border)",borderRadius:16,padding:32,textAlign:"center",marginTop:8}}>
+                  <div style={{fontSize:"2.5rem",marginBottom:10}}>🔒</div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontWeight:700,fontSize:"1.2rem",color:"var(--dark)",marginBottom:8}}>Members only</div>
+                  <div style={{color:"var(--brown)",fontSize:"0.9rem",opacity:0.75}}>Enter the site password to rate burgers</div>
+                </div>
+              )}
+              {raterName !== "Guest" && burgers.length === 0 && (
+                <div className="empty-state">
+                  <div>🍔</div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontSize:"1.1rem"}}>
+                    Add your first spot above 👆
+                  </div>
+                </div>
+              )}
+              {raterName !== "Guest" && [...burgers].reverse().map(burger => {
+                const r = ratings[burger.id] || {};
+                const isCollapsed = collapsed[burger.id];
+                const myPrev = burger.ratings?.find(x => x.name.toLowerCase() === raterName.toLowerCase());
+                return (
+                  <div key={burger.id} className="rate-card">
+                    <div className="rate-card-header">
+                      <div className="rate-card-name">{burger.name}</div>
+                      <button className="collapse-btn"
+                        onClick={() => setCollapsed(c => ({ ...c, [burger.id]: !c[burger.id] }))}>
+                        {isCollapsed ? "+" : "—"}
+                      </button>
+                    </div>
+
+                    {!isCollapsed && (
+                      <div>
+                        {CRITERIA.map(c => (
+                          <div key={c} className="criteria-row">
+                            <div>
+                              <div className="criteria-label">
+                                {c}
+                                {(r[c] || myPrev?.scores[c]) ? (
+                                  <span style={{marginLeft:8,color:"var(--gold)",fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontWeight:900,fontSize:"1rem",letterSpacing:0,textTransform:"none"}}>
+                                    {(r[c] || myPrev?.scores[c])}/5
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="criteria-sub">{CRITERIA_DESC[c]}</div>
+                            </div>
+                            <BurgerStars
+                              value={r[c] || (myPrev?.scores[c] || 0)}
+                              onChange={v => setRatings(prev => ({
+                                ...prev,
+                                [burger.id]: { ...(prev[burger.id] || {}), [c]: v }
+                              }))}
+                            />
+                          </div>
+                        ))}
+
+                        <div className="order-section">
+                          <div className="order-label">What did you order?</div>
+                          <input className="order-input"
+                            value={orderNotes[burger.id] || ""}
+                            onChange={e => setOrderNotes(p => ({ ...p, [burger.id]: e.target.value }))}
+                            placeholder="e.g. Smash burger w/ bacon…"/>
+                        </div>
+                        <div className="order-section" style={{borderTop:"1px solid var(--card-border)"}}>
+                          <div className="order-label">Price paid (₱)</div>
+                          <input className="order-input" type="number" min="0" step="1"
+                            value={prices[burger.id] || ""}
+                            onChange={e => setPrices(p => ({ ...p, [burger.id]: e.target.value }))}
+                            placeholder="e.g. 350"/>
+                        </div>
+
+                        <div className="visit-row">
+                          <div className="visit-label">Last Visit</div>
+                          <input type="date" className="visit-input"
+                            value={visitDates[burger.id] || today}
+                            onChange={e => setVisitDates(p => ({ ...p, [burger.id]: e.target.value }))}/>
+                        </div>
+
+                        <div className="submit-row">
+                          <button className="submit-btn" disabled={saving}
+                            onClick={() => handleRate(burger.id)}>
+                            {saving ? "Saving…" : "Submit Rating 🍔"}
+                          </button>
+                          {burger.ratings?.some(r => r.name.toLowerCase() === raterName.toLowerCase()) && (
+                            <button style={{width:"100%",marginTop:8,padding:"10px",borderRadius:14,border:"2px solid #c0392b",background:"transparent",color:"#c0392b",fontFamily:"'Lato',sans-serif",fontWeight:700,fontSize:"0.9rem",cursor:"pointer"}}
+                              onClick={() => { if(window.confirm("Remove your rating for " + burger.name + "?")) deleteMyRating(burger.id); }}>
+                              Remove my rating
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* BOARD VIEW */}
+          {view === "board" && (
+            <div>
+              {syncError && <div style={{color:"var(--red)",fontSize:"0.85rem",marginBottom:12}}>{syncError}</div>}
+
+              {/* Admin login modal */}
+              {showAdminLogin && (
+                <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999}}>
+                  <div style={{background:"var(--cream)",borderRadius:16,padding:24,width:"90%",maxWidth:360,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+                    <div style={{fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontWeight:700,fontSize:"1.2rem",color:"var(--dark)",marginBottom:16}}>Admin Login</div>
+                    <input className="join-input" type="password" value={adminInput} autoCapitalize="none" autoCorrect="off" autoComplete="off"
+                      onChange={e => setAdminInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          if (adminInput === ADMIN_PASSWORD) { setAdminMode(true); setShowAdminLogin(false); setAdminInput(""); }
+                          else showToast("Wrong password", "error");
+                        }
+                      }}
+                      placeholder="Password…" style={{width:"100%",marginBottom:12}}/>
+                    <div style={{display:"flex",gap:10}}>
+                      <button className="submit-btn" style={{flex:1}}
+                        onClick={() => {
+                          if (adminInput === ADMIN_PASSWORD) { setAdminMode(true); setShowAdminLogin(false); setAdminInput(""); }
+                          else showToast("Wrong password", "error");
+                        }}>Unlock</button>
+                      <button style={{flex:1,padding:"13px",borderRadius:14,border:"2px solid var(--card-border)",background:"transparent",color:"var(--dark)",fontWeight:700,cursor:"pointer"}}
+                        onClick={() => { setShowAdminLogin(false); setAdminInput(""); }}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pills">
+                {BOARD_FILTERS.map(f => (
+                  <button key={f} className={`pill${boardFilter === f ? " active" : ""}`}
+                    onClick={() => setBoardFilter(f)}>{f}</button>
+                ))}
+              </div>
+
+              {sortedBurgers.length === 0 && (
+                <div className="empty-state">
+                  <div>🏆</div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontStyle:"italic",fontSize:"1.1rem"}}>
+                    No burgers ranked yet!
+                  </div>
+                </div>
+              )}
+
+              {sortedBurgers.map((burger, idx) => (
+                <div key={burger.id} className="board-card">
+                  <div className="board-card-top">
+                    <div className="board-medal">{idx < 3 ? MEDALS[idx] : `#${idx+1}`}</div>
+                    <div style={{flex:1}}>
+                      <div className="board-name">{burger.name}</div>
+                      <div className="board-sub">avg of {burger.ratings?.length || 0} rater{burger.ratings?.length !== 1 ? "s" : ""}</div>
+                    </div>
+                    {burger.score && (
+                      <div className="score-badge">{boardFilter === "Price" ? `₱${burger.score}` : burger.score}</div>
+                    )}
+                    {adminMode && (
+                      <button style={{marginLeft:8,padding:"4px 10px",borderRadius:8,border:"1px solid #c0392b",background:"transparent",color:"#c0392b",fontSize:"0.75rem",cursor:"pointer",fontWeight:700,flexShrink:0}}
+                        onClick={() => { if(window.confirm("Delete " + burger.name + " and all its ratings?")) deleteRestaurant(burger.id); }}>
+                        🗑 Delete
+                      </button>
+                    )}
+                  </div>
+
+                  {burger.ratings?.length > 0 && (
+                    <div className="board-raters">
+                      {burger.ratings.map(r => {
+                        const s = boardFilter === "Price"
+                          ? (r.price != null ? `₱${r.price}` : "—")
+                          : boardFilter === "Overall"
+                          ? (CRITERIA.reduce((a, c) => a + (r.scores[c] || 0), 0) / CRITERIA.length).toFixed(1)
+                          : (r.scores[boardFilter] || 0).toFixed(1);
+                        const isYou = r.name.toLowerCase() === raterName.toLowerCase();
+                        return (
+                          <div key={r.name} className="rater-row">
+                            <span className="rater-name">{r.name}{isYou ? " (you)" : ""}</span>
+                            {r.visitDate && <span style={{color:"var(--gold-muted)",marginLeft:6,fontSize:"0.75rem"}}>{r.visitDate}</span>}
+                            <span style={{float:"right",marginLeft:16}} className="rater-score">{s}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
